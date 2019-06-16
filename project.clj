@@ -5,6 +5,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.10.0"]
                  [org.clojure/tools.namespace "0.2.11"]
+                 [hickory "0.7.1"]
                  [aero "1.1.3"]
                  [ring/ring-jetty-adapter "1.7.1"]
                  [metosin/reitit "0.2.13"]
