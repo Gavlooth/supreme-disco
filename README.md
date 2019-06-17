@@ -1,32 +1,38 @@
 # mobytronics-car-pooling
 
-FIXME: description
+description
+
+Iceland car pooling information fetching
 
 ## Installation
-
-Download from http://example.com/FIXME.
+This works from the repl. However modifications to create an 
+Uberjar should be trivial
 
 ## Usage
+from the user namespace within the repl hit (go)
+This by default initiates an http server on port 3334 
+If you want to change the jetty port you should modify 
+/resources/config.edn or add an entry in /config/config.edn
 
-FIXME: explanation
 
-    $ java -jar mobytronics-car-pooling-0.1.0-standalone.jar [args]
-
-## Options
-
-FIXME: listing of options this app accepts.
 
 ## Examples
-
+There are two endpoint on this service
+/services/drivers and /services/passengers
+Hiting the endpoints would fetct the first nx8 passenger, or driver
+details with all the extra info like distance of origin and destination,
+passenger notes  e.t.c. e.t.c.
+Example query    /services/drivers?page=1  //first 8 items
+**
 ...
 
 ### Bugs
-
+Dont know
 ...
 
-### Any Other Sections
-### That You Think
-### Might be Useful
+### Todo
+Other aproaches like streaming all the pages/or using regexes to exctract data 
+instead of hickory
 
 ## License
 

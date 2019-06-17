@@ -12,21 +12,9 @@
 (def json-mapper
    (json/object-mapper
     {:decode-key-fn keyword}))
-(def endpoint-drivers "http://apis.is/rides/samferda-drivers/")
 
 
-(def endpoint-passengers "http://apis.is/rides/samferda-passengers/")
-
-(def distance24 "https://www.distance24.org/route.json?stops=Selfoss|Lugar")
-
-(def distance24-2 "https://www.distance24.org/route.json?stops=Selfoss|Reykjavík")
-
-(def input-Ch (async/chan 100))
-
-(def output-Ch (async/chan 100))
-
-
-(defn exctract-driver-info [response]
+(defn exctract-info [response]
  (let [xsub-form (comp (remove #{"\n"})
                        (map :content))
        xform (comp (map :content)
@@ -36,48 +24,35 @@
                            {x' y}))))]
    (-> response :body parse as-hickory (->> (s/select  (s/tag :tr)) (transduce xform merge)))))
 
-(defn  add-distance-info [{:strs [From To] :as driver-info}]
+(defn  add-distance-info [{:strs [From To] :as info}]
  (let [url-encoded (URLEncoder/encode  (str From"|"To) "UTF-8")]
-  (.println System/out (str "https://www.distance24.org/route.json?stops="   url-encoded))
   (-> 
       (str "https://www.distance24.org/route.json?stops=" url-encoded)
       client/get
       :body
       json/read-value
       (get "distance")
-      (->> (assoc driver-info "Distance")))))
+      (->> (assoc info "Distance")))))
 
-(defn async-get-driver-info [link channel]
+(defn async-get-info [link channel]
   (let [intermediate-channel (async/chan)]
     (async/go
-      (async/>! intermediate-channel  (exctract-driver-info (client/get link))))
+      (async/>! intermediate-channel  (exctract-info (client/get link))))
     (async/go
-     (let [driver-info (async/<! intermediate-channel)]
-      (async/>! channel (add-distance-info driver-info))
-      (async/close! channel)))))
+      (let [info (async/<! intermediate-channel)]
+       (async/>! channel (add-distance-info info))
+       (async/close! channel)))))
 
 
-(defn get-driver-links []
-  (let [links (map :link (:results (json/read-value (:body (client/get endpoint-drivers)) json-mapper)))]
-   (async/onto-chan input-Ch links false)
-   (async/pipeline-async 30 output-Ch async-get-driver-info input-Ch  false)))
-
-
-(comment
-  (def end-point-results (delay (:results (json/read-value (:body (client/get endpoint-drivers)) json-mapper)))))
-
-(comment (def tmp (atom [])))
-
-(comment (async/go-loop []
-                (when-let [a (async/<! output-Ch)]
-                  (swap! tmp conj a)
-                  #_(.println System/out (str "going loop "  a))
-                 (recur))))
-
-
-(comment (do (get-driver-links)))
-(comment (map #(get % "Distance")(deref tmp)))
-
+(defn async-get-data [input-Ch output-Ch endpoint page]
+  (let [the-page  (Integer/parseInt  page)
+        links (take 8 (drop (* 8 (dec the-page))
+                            (map :link (:results
+                                         (json/read-value
+                                           (:body (client/get endpoint))
+                                           json-mapper)))))]
+    (async/onto-chan input-Ch links)
+    (async/pipeline-async 8 output-Ch async-get-info input-Ch)))
 
 
 

@@ -15,12 +15,6 @@
     [mobytronics-car-pooling.routes :as routes])
   (:import java.text.DecimalFormat))
 
-#_(def p-3 (java.text.DecimalFormat. "0.###"))
-
-(def mapper
-  (json/object-mapper
-    {:encode-key-fn name
-     :decode-key-fn  keyword}))
 
 
 
